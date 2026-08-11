@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>产品目录 - 济南佐佑汽车零部件有限公司</title>
+<meta name="description" content="济南佐佑汽车零部件产品目录：OEM原厂型号与佐佑型号对照查询，覆盖重汽、潍柴、康明斯起动机发电机，26万+型号数据。">
+<style>
+  :root {
+    --bg: #12151a;
+    --bg-card: #1a1e26;
+    --bg-card-hover: #20252f;
+    --orange: #ff6a00;
+    --orange-dark: #cc5500;
+    --text: #f2f4f7;
+    --text-dim: #9aa3ad;
+    --border: #2a303b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.7; min-height: 100vh; display: flex; flex-direction: column;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; width: 100%; }
+
+  /* 顶栏 */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(18, 21, 26, 0.92); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav { display: flex; align-items: center; justify-content: space-between; height: 60px; }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-mark {
+    width: 34px; height: 34px; border-radius: 8px; background: var(--orange);
+    color: #12151a; font-weight: 800; font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-text { color: var(--text); font-weight: 700; font-size: 15px; }
+  .logo-text small { display: block; font-size: 10px; color: var(--text-dim); font-weight: 400; letter-spacing: 2px; }
+  .nav-back a { color: var(--text-dim); text-decoration: none; font-size: 14px; }
+  .nav-back a:hover { color: var(--orange); }
+
+  /* Hero */
+  .hero { padding: 56px 0 44px; text-align: center; border-bottom: 1px solid var(--border);
+    background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,106,0,0.08), transparent 60%); }
+  .hero h1 { font-size: 32px; font-weight: 800; }
+  .hero h1 .accent { color: var(--orange); }
+  .hero p { color: var(--text-dim); font-size: 14px; margin-top: 8px; }
+  .hero .stats { margin-top: 14px; font-size: 15px; }
+  .hero .stats b { color: var(--orange); font-size: 20px; }
+
+  /* 搜索区 */
+  .search-wrap { max-width: 680px; margin: 28px auto 0; }
+  .search-box { display: flex; gap: 0; border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border); background: var(--bg-card); transition: border-color .2s; }
+  .search-box:focus-within { border-color: var(--orange); }
+  .search-box input {
+    flex: 1; border: none; outline: none; background: transparent;
+    color: var(--text); font-size: 16px; padding: 14px 18px; font-family: inherit;
+  }
+  .search-box input::placeholder { color: #5c6570; }
+  .search-box button {
+    border: none; background: var(--orange); color: #12151a;
+    font-size: 15px; font-weight: 700; padding: 0 26px; cursor: pointer; font-family: inherit;
+  }
+  .search-box button:hover { background: #ff7a1a; }
+  .search-hint { font-size: 12px; color: var(--text-dim); margin-top: 10px; }
+
+  /* 状态栏 */
+  #status { text-align: center; padding: 14px 0; font-size: 14px; color: var(--text-dim); min-height: 52px; }
+  #status .spin { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border);
+    border-top-color: var(--orange); border-radius: 50%; animation: rot .8s linear infinite; vertical-align: -3px; margin-right: 8px; }
+  @keyframes rot { to { transform: rotate(360deg); } }
+  .progress-bar { height: 4px; background: var(--border); border-radius: 2px; max-width: 480px; margin: 10px auto 0; overflow: hidden; }
+  .progress-bar i { display: block; height: 100%; width: 0%; background: var(--orange); transition: width .3s; }
+
+  /* 分片浏览网格 */
+  .parts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; padding: 10px 0 40px; }
+  .part-card {
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 18px 14px; text-align: center; cursor: pointer; transition: all .2s;
+  }
+  .part-card:hover { border-color: var(--orange); transform: translateY(-2px); }
+  .part-card .n { font-size: 22px; font-weight: 800; color: var(--orange); }
+  .part-card .d { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+  .part-card.active { border-color: var(--orange); background: var(--bg-card-hover); }
+
+  /* 结果表格 */
+  .table-wrap { display: none; padding-bottom: 50px; }
+  .table-wrap.show { display: block; }
+  .table-title { display: flex; justify-content: space-between; align-items: center; margin: 8px 0 14px; flex-wrap: wrap; gap: 10px; }
+  .table-title h2 { font-size: 18px; }
+  .table-title .count { font-size: 13px; color: var(--text-dim); }
+  .table-title .count b { color: var(--orange); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  thead th {
+    background: #171b22; color: var(--text-dim); font-weight: 600; text-align: left;
+    padding: 12px 16px; font-size: 13px; letter-spacing: 1px; border-bottom: 1px solid var(--border);
+  }
+  tbody td { padding: 10px 16px; border-bottom: 1px solid #222730; }
+  tbody tr:hover td { background: var(--bg-card-hover); }
+  tbody td.num { color: var(--text-dim); width: 70px; }
+  tbody td.oem { font-weight: 600; color: var(--orange); }
+  tbody td.zy { color: var(--text); word-break: break-all; }
+
+  /* 分页 */
+  .pager { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+  .pager button {
+    background: var(--bg-card); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 18px; font-size: 14px; cursor: pointer; font-family: inherit;
+  }
+  .pager button:hover:not(:disabled) { border-color: var(--orange); color: var(--orange); }
+  .pager button:disabled { opacity: .35; cursor: not-allowed; }
+  .pager .info { font-size: 13px; color: var(--text-dim); }
+
+  /* 下载区 */
+  .download { text-align: center; padding: 30px 0 50px; }
+  .btn {
+    display: inline-block; padding: 13px 34px; border-radius: 8px; font-size: 15px; font-weight: 600;
+    text-decoration: none; transition: transform .15s;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn-primary { background: var(--orange); color: #12151a; box-shadow: 0 4px 20px rgba(255,106,0,0.3); }
+  .btn-ghost { border: 1px solid var(--border); color: var(--text); margin-left: 12px; }
+  .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
+
+  footer { margin-top: auto; border-top: 1px solid var(--border); padding: 22px 0; text-align: center; font-size: 12px; color: var(--text-dim); }
+  footer a { color: var(--text-dim); }
+  footer a:hover { color: var(--orange); }
+
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 26px; }
+    .parts-grid { grid-template-columns: repeat(3, 1fr); }
+    tbody td { padding: 8px 10px; font-size: 13px; }
+    .search-box button { padding: 0 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container nav">
+    <a class="logo" href="index.html">
+      <div class="logo-mark">佐</div>
+      <div class="logo-text">济南佐佑汽车零部件<small>产品目录</small></div>
+    </a>
+    <div class="nav-back"><a href="index.html">← 返回主页</a></div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container">
+    <h1>产品<span class="accent">目录</span></h1>
+    <p>OEM 原厂型号 ↔ 佐佑型号 对照查询 · 覆盖重汽 / 潍柴 / 康明斯起动机·发电机</p>
+    <div class="stats">共 <b id="statTotal">--</b> 条型号数据 · <span id="statParts">--</span> 个分片</div>
+    <div class="search-wrap">
+      <div class="search-box">
+        <input id="q" type="text" placeholder="输入型号关键词搜索，例如：13888 或 100211" autocomplete="off">
+        <button id="btnSearch">搜索</button>
+      </div>
+      <div class="search-hint">提示：搜索会加载全部数据（首次约需数秒），之后即可实时查询；也可以点击下方分片逐段浏览。</div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <div id="status">正在加载目录索引…<div class="progress-bar"><i id="bar" style="width:0%"></i></div></div>
+</div>
+
+<div class="container">
+  <div id="partsView"></div>
+  <div id="tableWrap" class="table-wrap">
+    <div class="table-title">
+      <h2 id="tableTitle">查询结果</h2>
+      <span class="count" id="tableCount"></span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>#</th><th>OEM 原厂型号</th><th>佐佑型号</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager" id="pager"></div>
+  </div>
+  <div class="download">
+    <a class="btn btn-primary" href="downloads/佐佑产品目录_完整版.xlsx" download>📥 下载完整产品目录 Excel</a>
+    <a class="btn btn-ghost" href="index.html">← 返回主页</a>
+  </div>
+</div>
+
+<footer>
+  <div class="container">© 2026 济南佐佑汽车零部件有限公司 · 重汽/潍柴/康明斯 起动机·发电机 OEM<br>
+  <a href="index.html">公司主页</a> · <a href="https://jnanqp.blogspot.com" target="_blank">产品目录博客</a></div>
+</footer>
+
+<script>
+(function(){
+  var BASE = 'catalog/';
+  var PAGE_SIZE = 50;
+  var indexData = null;   // {total, parts, files[]}
+  var allData = null;     // 全库 [{o,z}...]
+  var loadedParts = {};   // partName -> [data]
+  var currentPart = null; // 当前浏览的分片
+  var currentRows = [];   // 当前展示的数据
+  var page = 1;
+  var searchMode = false;
+
+  var $ = function(id){ return document.getElementById(id); };
+
+  function setStatus(html, barPct){
+    $('status').innerHTML = html + (barPct !== undefined ? '<div class="progress-bar"><i style="width:'+barPct+'%"></i></div>' : '');
+  }
+
+  // 加载索引
+  fetch(BASE + 'index.json').then(function(r){ return r.json(); }).then(function(d){
+    indexData = d;
+    $('statTotal').textContent = d.total.toLocaleString();
+    $('statParts').textContent = d.files.length;
+    renderParts();
+    setStatus('✅ 目录就绪：' + d.total.toLocaleString() + ' 条数据，' + d.files.length + ' 个分片。点击分片浏览，或输入关键词搜索。');
+  }).catch(function(e){
+    setStatus('⚠️ 目录加载失败：' + e.message);
+  });
+
+  // 分片网格
+  function renderParts(){
+    var html = '<div class="parts-grid">';
+    for (var i = 0; i < indexData.files.length; i++){
+      var n = i + 1;
+      html += '<div class="part-card" data-part="' + indexData.files[i] + '">' +
+              '<div class="n">片 ' + n + '</div>' +
+              '<div class="d">约 ' + Math.round(indexData.total / indexData.files.length).toLocaleString() + ' 条</div></div>';
+    }
+    html += '</div>';
+    $('partsView').innerHTML = html;
+    document.querySelectorAll('.part-card').forEach(function(card){
+      card.addEventListener('click', function(){ browsePart(this.dataset.part, card); });
+    });
+  }
+
+  // 浏览某分片
+  function browsePart(name, cardEl){
+    searchMode = false;
+    currentPart = name;
+    document.querySelectorAll('.part-card').forEach(function(c){ c.classList.remove('active'); });
+    if (cardEl) cardEl.classList.add('active');
+    if (loadedParts[name]){
+      showRows(loadedParts[name], '片 ' + name.replace(/part-0*(\d+).json/,'$1') + ' 数据');
+      return;
+    }
+    setStatus('<span class="spin"></span>正在加载分片…');
+    fetch(BASE + 'parts/' + name).then(function(r){ return r.json(); }).then(function(d){
+      loadedParts[name] = d;
+      showRows(d, '片 ' + name.replace(/part-0*(\d+).json/,'$1') + ' 数据');
+    }).catch(function(e){ setStatus('⚠️ 分片加载失败：' + e.message); });
+  }
+
+  // 加载全库
+  function loadAll(cb){
+    if (allData){ cb(); return; }
+    var files = indexData.files;
+    var loaded = 0;
+    var all = [];
+    setStatus('<span class="spin"></span>正在加载全库数据（共 ' + files.length + ' 个分片）…', 0);
+    (function next(batchIdx){
+      if (batchIdx >= files.length){
+        allData = all;
+        setStatus('✅ 全库已加载：' + all.length.toLocaleString() + ' 条，可直接搜索。');
+        cb();
+        return;
+      }
+      var batch = files.slice(batchIdx, batchIdx + 6);
+      Promise.all(batch.map(function(f){
+        return fetch(BASE + 'parts/' + f).then(function(r){ return r.json(); });
+      })).then(function(chunks){
+        chunks.forEach(function(c){ all = all.concat(c); });
+        loaded += batch.length;
+        setStatus('<span class="spin"></span>正在加载全库数据（' + loaded + '/' + files.length + ' 个分片）…',
+                  Math.round(loaded / files.length * 100));
+        next(batchIdx + 6);
+      });
+    })(0);
+  }
+
+  // 执行搜索
+  function doSearch(){
+    var q = $('q').value.trim().toLowerCase();
+    if (!q){ return; }
+    loadAll(function(){
+      searchMode = true;
+      currentPart = null;
+      document.querySelectorAll('.part-card').forEach(function(c){ c.classList.remove('active'); });
+      var rows = allData.filter(function(it){
+        return it.o.toLowerCase().indexOf(q) > -1 || it.z.toLowerCase().indexOf(q) > -1;
+      });
+      showRows(rows, '搜索结果：' + q.toUpperCase(), '共 ' + rows.length.toLocaleString() + ' 条匹配');
+    });
+  }
+
+  $('btnSearch').addEventListener('click', doSearch);
+  $('q').addEventListener('keydown', function(e){ if (e.key === 'Enter') doSearch(); });
+
+  // 显示数据（分页）
+  function showRows(rows, title, countText){
+    currentRows = rows;
+    page = 1;
+    $('tableTitle').textContent = title;
+    $('tableCount').innerHTML = countText || ('共 ' + rows.length.toLocaleString() + ' 条');
+    $('tableWrap').classList.add('show');
+    renderPage();
+  }
+
+  function renderPage(){
+    var tbody = $('tbody');
+    var start = (page - 1) * PAGE_SIZE;
+    var slice = currentRows.slice(start, start + PAGE_SIZE);
+    var html = '';
+    for (var i = 0; i < slice.length; i++){
+      var it = slice[i];
+      html += '<tr><td class="num">' + (start + i + 1) + '</td>' +
+              '<td class="oem">' + esc(it.o) + '</td>' +
+              '<td class="zy">' + esc(it.z || '—') + '</td></tr>';
+    }
+    tbody.innerHTML = html || '<tr><td colspan="3" style="text-align:center;color:var(--text-dim);padding:30px;">没有匹配的型号</td></tr>';
+    // 分页控件
+    var totalPages = Math.max(1, Math.ceil(currentRows.length / PAGE_SIZE));
+    var pager = $('pager');
+    pager.innerHTML = '<button id="pgPrev" ' + (page <= 1 ? 'disabled' : '') + '>← 上一页</button>' +
+                      '<span class="info">第 ' + page + ' / ' + totalPages + ' 页</span>' +
+                      '<button id="pgNext" ' + (page >= totalPages ? 'disabled' : '') + '>下一页 →</button>';
+    $('pgPrev').addEventListener('click', function(){ if (page > 1){ page--; renderPage(); window.scrollTo({top: 260, behavior: 'smooth'}); } });
+    $('pgNext').addEventListener('click', function(){ if (page < totalPages){ page++; renderPage(); window.scrollTo({top: 260, behavior: 'smooth'}); } });
+  }
+
+  function esc(s){
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+})();
+</script>
+</body>
+</html>
