@@ -77,17 +77,6 @@
   .progress-bar { height: 4px; background: var(--border); border-radius: 2px; max-width: 480px; margin: 10px auto 0; overflow: hidden; }
   .progress-bar i { display: block; height: 100%; width: 0%; background: var(--orange); transition: width .3s; }
 
-  /* 分片浏览网格 */
-  .parts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; padding: 10px 0 40px; }
-  .part-card {
-    background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
-    padding: 18px 14px; text-align: center; cursor: pointer; transition: all .2s;
-  }
-  .part-card:hover { border-color: var(--orange); transform: translateY(-2px); }
-  .part-card .n { font-size: 22px; font-weight: 800; color: var(--orange); }
-  .part-card .d { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
-  .part-card.active { border-color: var(--orange); background: var(--bg-card-hover); }
-
   /* 结果表格 */
   .table-wrap { display: none; padding-bottom: 50px; }
   .table-wrap.show { display: block; }
@@ -162,7 +151,7 @@
         <input id="q" type="text" placeholder="输入型号关键词搜索，例如：13888 或 100211" autocomplete="off">
         <button id="btnSearch">搜索</button>
       </div>
-      <div class="search-hint">提示：搜索会加载全部数据（首次约需数秒），之后即可实时查询；也可以点击下方分片逐段浏览。</div>
+      <div class="search-hint">提示：输入关键词后点击「搜索」，首次会加载全部数据（约需数秒，有进度条），之后即可实时查询。</div>
     </div>
   </div>
 </section>
@@ -172,7 +161,6 @@
 </div>
 
 <div class="container">
-  <div id="partsView"></div>
   <div id="tableWrap" class="table-wrap">
     <div class="table-title">
       <h2 id="tableTitle">查询结果</h2>
@@ -203,8 +191,6 @@
   var PAGE_SIZE = 50;
   var indexData = null;   // {total, parts, files[]}
   var allData = null;     // 全库 [{o,z}...]
-  var loadedParts = {};   // partName -> [data]
-  var currentPart = null; // 当前浏览的分片
   var currentRows = [];   // 当前展示的数据
   var page = 1;
   var searchMode = false;
@@ -215,49 +201,19 @@
     $('status').innerHTML = html + (barPct !== undefined ? '<div class="progress-bar"><i style="width:'+barPct+'%"></i></div>' : '');
   }
 
-  // 加载索引
+  // 加载索引 + 随机样本（秒开）
   fetch(BASE + 'index.json').then(function(r){ return r.json(); }).then(function(d){
     indexData = d;
     $('statTotal').textContent = d.total.toLocaleString();
     $('statParts').textContent = d.files.length;
-    renderParts();
-    setStatus('✅ 目录就绪：' + d.total.toLocaleString() + ' 条数据，' + d.files.length + ' 个分片。点击分片浏览，或输入关键词搜索。');
+    setStatus('<span class="spin"></span>正在加载随机样本…');
+    return fetch(BASE + 'sample.json');
+  }).then(function(r){ return r.json(); }).then(function(sample){
+    setStatus('✅ 已展示 ' + sample.length + ' 条随机样本 · 全库共 ' + indexData.total.toLocaleString() + ' 条，输入关键词可搜索全部数据');
+    showRows(sample, '随机样本展示');
   }).catch(function(e){
-    setStatus('⚠️ 目录加载失败：' + e.message);
+    setStatus('⚠️ 加载失败：' + e.message);
   });
-
-  // 分片网格
-  function renderParts(){
-    var html = '<div class="parts-grid">';
-    for (var i = 0; i < indexData.files.length; i++){
-      var n = i + 1;
-      html += '<div class="part-card" data-part="' + indexData.files[i] + '">' +
-              '<div class="n">片 ' + n + '</div>' +
-              '<div class="d">约 ' + Math.round(indexData.total / indexData.files.length).toLocaleString() + ' 条</div></div>';
-    }
-    html += '</div>';
-    $('partsView').innerHTML = html;
-    document.querySelectorAll('.part-card').forEach(function(card){
-      card.addEventListener('click', function(){ browsePart(this.dataset.part, card); });
-    });
-  }
-
-  // 浏览某分片
-  function browsePart(name, cardEl){
-    searchMode = false;
-    currentPart = name;
-    document.querySelectorAll('.part-card').forEach(function(c){ c.classList.remove('active'); });
-    if (cardEl) cardEl.classList.add('active');
-    if (loadedParts[name]){
-      showRows(loadedParts[name], '片 ' + name.replace(/part-0*(\d+).json/,'$1') + ' 数据');
-      return;
-    }
-    setStatus('<span class="spin"></span>正在加载分片…');
-    fetch(BASE + 'parts/' + name).then(function(r){ return r.json(); }).then(function(d){
-      loadedParts[name] = d;
-      showRows(d, '片 ' + name.replace(/part-0*(\d+).json/,'$1') + ' 数据');
-    }).catch(function(e){ setStatus('⚠️ 分片加载失败：' + e.message); });
-  }
 
   // 加载全库
   function loadAll(cb){
@@ -292,8 +248,6 @@
     if (!q){ return; }
     loadAll(function(){
       searchMode = true;
-      currentPart = null;
-      document.querySelectorAll('.part-card').forEach(function(c){ c.classList.remove('active'); });
       var rows = allData.filter(function(it){
         return it.o.toLowerCase().indexOf(q) > -1 || it.z.toLowerCase().indexOf(q) > -1;
       });
