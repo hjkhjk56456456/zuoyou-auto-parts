@@ -28,7 +28,8 @@ for fi, f in enumerate(files, 1):
         # 解析: 'OEM型号 Zuoyou, 佐佑型号1 Zuoyou, 佐佑型号2 ...'
         parts = [p.strip() for p in s.split('Zuoyou,')]
         oem = parts[0]
-        zy = ' / '.join(p for p in parts[1:] if p)
+        # 清洗每段末尾可能残留的 'Zuoyou'（无逗号结尾的脏数据）
+        zy = ' / '.join(p.rstrip('Zuoyou').strip() for p in parts[1:] if p.strip())
         if not oem:
             continue
         key = (oem.lower(), zy.lower())
@@ -77,4 +78,13 @@ for i, it in enumerate(items, 1):
 xl = os.path.join(DL_DIR, '佐佑产品目录_完整版.xlsx')
 wb.save(xl)
 print(f'Excel 完成: {os.path.getsize(xl)/1024/1024:.1f} MB -> {xl}')
+
+# 随机样本（首页秒开展示用）
+import random
+random.seed(42)
+sample = random.sample(items, min(200, len(items)))
+random.shuffle(sample)
+with open(os.path.join(OUT, 'catalog', 'sample.json'), 'w', encoding='utf-8') as fh:
+    json.dump([{'o': it['o'], 'z': it['z']} for it in sample], fh, ensure_ascii=False, separators=(',', ':'))
+print(f'样本: {len(sample)} 条 -> catalog/sample.json')
 print('DONE')
